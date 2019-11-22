@@ -1,7 +1,7 @@
 # Site settings
 title: 搬砖日志
 SEOTitle: 搬砖日志 | Schoko's Bolg
-header-img: img/post-bg-desk.jpg
+header-img: img/header_pic.jpg
 email: yyzhangcs@outlook.com
 description: ""
 keyword: "machine learning, data science, python, deep learning"
@@ -12,7 +12,7 @@ github_repo: "https://github.com/sesebukin/sesebukin.github.io.git" # you code r
 # Sidebar settings
 sidebar: true                           # whether or not using Sidebar.
 sidebar-about-description: ""
-sidebar-avatar: /img/about-BY-gentle.jpg      # use absolute URL, seeing it's used in both `/` and `/about/`
+sidebar-avatar: /img/avatar.jpg      # use absolute URL, seeing it's used in both `/` and `/about/`
 
 
 
@@ -86,7 +86,7 @@ kramdown:
 
 # Featured Tags
 featured-tags: true                     # 是否使用首页标签
-featured-condition-size: 1              # 相同标签数量大于这个数，才会出现在首页
+featured-condition-size: 0              # 相同标签数量大于这个数，才会出现在首页
 
 
 
