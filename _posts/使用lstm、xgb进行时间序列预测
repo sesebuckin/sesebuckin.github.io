@@ -1,0 +1,21 @@
+---
+layout:     post
+title:      时间序列预测
+subtitle:   lstm与xgb应用实践
+date:       2019-11-22
+author:     Schoko
+header-img: img/post-ts-p1.png
+catalog: true
+tags:
+    - TimeSeries
+    - LSTM
+    - XGBoost
+---
+
+## 时间序列（Time Series）
+
+时间序列（Time Series）指以时间为维度的一系列数值，常见的时间序列包括股市价格走势、天气预报中的温度走势等。下图展示了一个典型的时间序列：
+
+![](img/post-ts-p1.png)
+
+
