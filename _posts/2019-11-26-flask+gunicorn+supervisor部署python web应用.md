@@ -32,7 +32,7 @@ tags:
 
 #### 安装依赖包
 
-```shell script
+```shell
 sudo pip install Flask
 sudo pip install Flask-RESTful
 sudo pip install gunicorn
@@ -118,7 +118,7 @@ if __name__ == "__main__":
 
 直接通过gunicore启动flask：
 
-```shell script
+```shell
 gunicore -w 4 -b 0.0.0.0:5000 wsgi:app
 ```
 
@@ -131,7 +131,7 @@ gunicore -w 4 -b 0.0.0.0:5000 wsgi:app
 
 首先生成默认配置文件：
 
-```shell script
+```shell
 echo_supervisord_conf > supervisor.conf
 vim supervisor.conf
 ```
@@ -154,7 +154,7 @@ stderr_logfile=/home/powerop/work/gunicorn.err
 
 #### 通过supervisor开启/关闭进程
 
-```shell script
+```shell
 supervisord -c supervisor.conf                             # 通过配置文件启动supervisor
 supervisorctl -c supervisor.conf status                    # 察看supervisor的状态
 supervisorctl -c supervisor.conf reload                    # 重新载入 配置文件
@@ -164,7 +164,7 @@ supervisorctl -c supervisor.conf stop [all]|[appname]      # 关闭指定/所有
 
 打开web service：
 
-```shell script
+```shell
 supervisorctl -c supervisor.conf start wsgi   # 开启
 ```
 
@@ -182,7 +182,7 @@ supervisorctl -c supervisor.conf start wsgi   # 开启
 
 关闭web service：
 
-```shell script
+```shell
 supervisorctl -c supervisor.conf stop wsgi   # 关闭
 ```
 
