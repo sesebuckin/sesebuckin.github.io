@@ -87,4 +87,25 @@ def nlp_process(df, helper):
     return df
 ```
 
+### 获取每一列unique values
+```python
+# select unique values in each column
+    texts = set()
+    for col in text_cols:
+        tmp_data = [i[col] for i in df.select(col).distinct().collect()]
+        texts.update(tmp_data)
+```
+
+在SQL中可以直接
+```text
+select distinct(colname) from table
+```
+实现，
+在pandas中是
+```python
+df[colname].unique()
+```
+Spark的操作与SQL类似，通过distinct()与collect()，得到列col下的unique值列表，
+通过遍历需要查询的col，将所有值update到一个set中，保证不出现重复值。
+
 tbc
