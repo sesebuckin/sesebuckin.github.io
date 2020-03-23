@@ -29,6 +29,16 @@ tags:
 先放上主要代码：
 
 ```python
+
+from pyspark.sql.types import *
+from pyspark.sql import functions as F
+from configparser import ConfigParser
+import time
+import pandas as pd
+
+from features.nlp_modules import *
+from utils.SparkHelper import SparkHelper
+
 def nlp_process(df, helper):
     text_model = TextModel(cfg)
     text_cols = cfg.get('word2vec', 'cols').split(',')
@@ -75,7 +85,6 @@ def nlp_process(df, helper):
     df = join_with_text_trans(df, tmp_df, text_cols, vector_columns)
 
     return df
-
 ```
 
 tbc
