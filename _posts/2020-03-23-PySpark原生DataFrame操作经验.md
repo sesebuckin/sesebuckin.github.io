@@ -75,52 +75,53 @@ for word in jieba_words:
 
 完整流程示例如下：
 ```python
-from gensim.models import Word2Vec
-import numpy as np
-import jieba
-import jieba.analyse
-
-class TextModel:
-
-    def __init__(self, cfg):
-        self.cfg = cfg
-
-    def jieba_module(self, data, section):
-        jieba_words = self.cfg.get(section, "jieba_words").split(',')
-        for word in jieba_words:
-            jieba.suggest_freq(word, True)
-        data = [" ".join(jieba.cut(str(e))) for e in data]
-        return data
-
-    def build(self, data, section):
-        min_count = int(self.cfg.get(section, "min_count"))
-        size = int(self.cfg.get(section, "size"))
-        window = int(self.cfg.get(section, "window"))
+    from gensim.models import Word2Vec
+    import numpy as np
+    import jieba
+    import jieba.analyse
     
-        model = Word2Vec(data, min_count=min_count, size=size, window=window, workers=4)
-        return model
+    class TextModel:
     
-    def text2vec(self, model, section, row):
-        vec = np.zeros(50)  # here uses numpy dtype
-        count = 0
-        for word in row:
-            try:
-                vec += model[word]
-                count += 1
-            except:
-                pass
-        if count == 0:
-            return vec
-        return vec/count
-
-text_model = TextModel(cfg)
-
-texts_trans = [text_model.re_module(item) for item in texts]
-texts_trans = text_model.jieba_module(texts_trans, 'word2vec')
-
-model = text_model.build(texts_trans, 'word2vec')  # build word2vec model
-vectors = [text_model.text2vec(model, 'word2vec', t) for t in texts_trans]
-vector_columns = ["vector_{}".format(i) for i in range(len(vectors[0]))]
+        def __init__(self, cfg):
+            self.cfg = cfg
+    
+        def jieba_module(self, data, section):
+            jieba_words = self.cfg.get(section, "jieba_words").split(',')
+            for word in jieba_words:
+                jieba.suggest_freq(word, True)
+            data = [" ".join(jieba.cut(str(e))) for e in data]
+            return data
+    
+        def build(self, data, section):
+            min_count = int(self.cfg.get(section, "min_count"))
+            size = int(self.cfg.get(section, "size"))
+            window = int(self.cfg.get(section, "window"))
+        
+            model = Word2Vec(data, min_count=min_count, size=size, window=window, workers=4)
+            return model
+        
+        def text2vec(self, model, section, row):
+            vec = np.zeros(50)  # here uses numpy dtype
+            count = 0
+            for word in row:
+                try:
+                    vec += model[word]
+                    count += 1
+                except:
+                    pass
+            if count == 0:
+                return vec
+            return vec/count
+    
+    if name == "__main__":
+        text_model = TextModel(cfg)
+        
+        texts_trans = [text_model.re_module(item) for item in texts]
+        texts_trans = text_model.jieba_module(texts_trans, 'word2vec')
+        
+        model = text_model.build(texts_trans, 'word2vec')  # build word2vec model
+        vectors = [text_model.text2vec(model, 'word2vec', t) for t in texts_trans]
+        vector_columns = ["vector_{}".format(i) for i in range(len(vectors[0]))]
 ```
 我们来学习一下Word2Vec的具体用法，首先是类定义：
 ```python
@@ -193,7 +194,7 @@ values = [float(v) for v in values]  # from np.float64 to float
 
 ### 后记
 
-这篇博客的产生原因，是我最开始全称用Pandas来处理数据，然而数据量一上去，效率就很低，原先job平均要跑20分钟。
+这篇博客的产生原因，是我最开始全程用Pandas来处理数据，然而数据量一上去，效率就很低，原先job平均要跑20分钟。
 改写为PySpark处理后，job平均运行时长缩短为2分钟。
 
 你可能会问，既然是Spark为什么不直接写Scala。我最开始用PySpark的原因，是因为想用word2vec的python第三方包。
