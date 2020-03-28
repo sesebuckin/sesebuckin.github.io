@@ -101,7 +101,8 @@ for word in jieba_words:
             return model
         
         def text2vec(self, model, section, row):
-            vec = np.zeros(50)  # here uses numpy dtype
+            # here uses numpy dtype
+            vec = np.zeros(50)  
             count = 0
             for word in row:
                 try:
@@ -119,7 +120,8 @@ for word in jieba_words:
         texts_trans = [text_model.re_module(item) for item in texts]
         texts_trans = text_model.jieba_module(texts_trans, 'word2vec')
         
-        model = text_model.build(texts_trans, 'word2vec')  # build word2vec model
+        # build word2vec model
+        model = text_model.build(texts_trans, 'word2vec')  
         vectors = [text_model.text2vec(model, 'word2vec', t) for t in texts_trans]
         vector_columns = ["vector_{}".format(i) for i in range(len(vectors[0]))]
 ```
@@ -153,10 +155,13 @@ online预测时，拉取并进行反序列化，这样是最快速的方法。
 这里采用**json**来进行序列化与反序列化。需要注意NaN问题（见注释）：
 ```python
 # word2vec will generate NaN, after json serialization and setting to redis
+
 # the value is still NaN (which is only recognizable in numpy, not in Java or C++ etc.)
+
 # so we need to fill the nan with correct value (here we fill in with float 0.0)
 
 # serialize the dict object using JSON, not pickle
+
 # in case we can load this json obj through any other programming language
 
 json_obj = json.dumps(res)
@@ -186,7 +191,9 @@ Spark不支持numpy的数据类型，因此会报错。Spark对python内置的�
 示例：
 ```python
 # spark do not support numpy data type
+
 # need to do transferring before assign to spark
+
 # otherwise it will occur error
 
 values = [float(v) for v in values]  # from np.float64 to float

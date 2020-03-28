@@ -245,7 +245,7 @@ val paramMap = Map(
 val Classifier = new XGBoostClassifier(paramMap)
         .setLabelCol("label")
         .setFeaturesCol("features")
-        .setEvalSets(Map("eval" -> valDF))  //setEvalSets(Map("train" -> trainDF, "eval" -> valDF))
+        .setEvalSets(Map("eval" -> valDF))
         .setEvalMetric("logloss")
         .setNumEarlyStoppingRounds(10)
         .setMaximizeEvaluationMetrics(false)
@@ -259,7 +259,7 @@ println(model.summary.toString())  // 输出train set和val set在训练过程�
 特征重要性：
 ```scala
 val featureScoreMap_gain = model.nativeBooster.getScore("", "gain")
-val sortedScoreMap = featureScoreMap_gain.toSeq.sortBy(-_._2) // descending order
+val sortedScoreMap = featureScoreMap_gain.toSeq.sortBy(-_._2)
 println(sortedScoreMap)
 ```
 
@@ -272,10 +272,15 @@ val oriPrediction = model.transform(testDF)
 ```scala
 /**
   * When we get a model, either XGBoostClassificationModel or XGBoostRegressionModel,
+
   * it takes a DataFrame, read the column containing feature vectors,
+
   * predict for each feature vector, and output a new DataFrame
+
   * XGBoostClassificationModel will output margins (rawPredictionCol),
+
   * probabilities(probabilityCol) and the eventual prediction labels (predictionCol) for each possible label.
+
   * */
 ```
 对于二分类任务，我们需要关系的字段是模型预测的log probability以及真实标签。这是在集群运行时打印出的结果：
@@ -321,10 +326,10 @@ if ((meanAUCRow != null && meanAUCRow.length > 0) && (meanLoglossRow != null && 
             && (meanLoglossRowHead != null && meanLoglossRowHead.length > 0 && meanLoglossRowHead.get(0) != null)) {
         val meanAUC = meanAUCRowHead.getFloat(0)
         val meanLogloss = meanLoglossRowHead.getFloat(0)
-        if (((meanAUC - testAUCFloat) <= thresh) || ((meanLogloss - testLoglossFloat) <= thresh)) {1}  // succeed
-        else {0}  // failed
-    } else {0}  // failed
-} else{0}  // failed
+        if (((meanAUC - testAUCFloat) <= thresh) || ((meanLogloss - testLoglossFloat) <= thresh)) {1}
+        else {0}
+    } else {0}
+} else{0}
 ```
 
 根据评估情况，决定是否进行model persistence：
