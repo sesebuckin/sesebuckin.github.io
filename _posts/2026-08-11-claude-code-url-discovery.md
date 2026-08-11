@@ -77,6 +77,7 @@ async def process_single_domain(
             tasks = [fetch_page(session, url) for url in urls_to_fetch]
             html_results = await asyncio.gather(*tasks, return_exceptions=True)
             # ...
+
 {% endhighlight %}
 
 几个关键的工程参数：
@@ -101,6 +102,7 @@ def is_utility_page(url: str, title: str, h1_text: str) -> bool:
         "author", "contributor", "tag/", "category/",
     ]
     # ...
+
 {% endhighlight %}
 
 `should_skip_url`在URL发现阶段就拦截了一波，`is_utility_page`在内容提取后做第二层过滤。两层防护下来，About Us、Privacy Policy这类页面基本进不了匹配环节。
@@ -141,6 +143,7 @@ class KeywordMatcher:
         self.tfidf_threshold = tfidf_threshold
         self.stemmer = SnowballStemmer("english")
         # 多语言词干提取：英语 + 法语/西语/葡萄牙语
+
         self.stemmer_map = {
             "en": self.stemmer,
             "fr": FrenchStemmer(),
@@ -161,11 +164,13 @@ def match(self, text, url, title, h1_text):
     matches = []
 
     # Phase 1: exact substring
+
     for kw in self.keywords:
         if kw.lower() in text_lower:
             matches.append((kw, 1.0))
 
     # Phase 2: token-level Jaccard
+
     doc_tokens = set(self._tokenize(text))
     for kw in self.keywords:
         kw_tokens = set(self._tokenize(kw))
@@ -174,6 +179,7 @@ def match(self, text, url, title, h1_text):
             matches.append((kw, jaccard))
 
     # Phase 3: TF-IDF cosine similarity
+
     if doc_tokens:
         doc_text = " ".join(doc_tokens)
         doc_vec = self.vectorizer.transform([doc_text])
@@ -182,6 +188,7 @@ def match(self, text, url, title, h1_text):
             if score >= self.tfidf_threshold:
                 matches.append((self.keywords[i], score))
     # ...
+
 {% endhighlight %}
 
 TF-IDF阈值设在0.18是经过多次调整的。太低会引入噪声，太高会漏掉语义相关但用词不同的页面。
@@ -195,9 +202,11 @@ def compute_relevance_score(row, keyword_specificity, domain_blacklist):
     score = 0.0
 
     # L1: 关键词特异性 (0-40分)
+
     kw = row["Detected Keyword"].lower()
     if any(kw in slot_kw for slot_kw in SLOT_KEYWORDS):
         # 老虎机关键词，特异性最高
+
         score += 40
     elif any(kw in guide_kw for guide_kw in GUIDE_KEYWORDS):
         score += 35
@@ -205,27 +214,36 @@ def compute_relevance_score(row, keyword_specificity, domain_blacklist):
         score += 30
     else:
         # 通用词，惩罚较大
+
         score += max(10, keyword_specificity.get(kw, 10))
 
     # L2: 域名相关性 (0-30分)
+
     domain = row["Source Domain"].lower()
     if domain in domain_blacklist:
         # 黑名单域名，强制上限29分
+
         return min(score, 29)
     # 检查域名中的赌博信号词
+
     gambling_signals = [
         "casino", "bet", "slot", "poker", "gambling",
         # ... 更多信号词
+
     ]
     score += sum(5 for s in gambling_signals if s in domain)
 
     # L3: 内容质量 (0-20分)
+
     url_depth = row["Target URL"].count("/") - 2
     # URL深度加分 + 标题丰富度 + 路径赌博信号检测
+
     score += min(url_depth * 2, 8)
 
     # L4: 匹配质量 (0-10分)
+
     # 多词关键词得分更高
+
     if len(kw.split()) > 2:
         score += 5
     elif len(kw.split()) > 1:
