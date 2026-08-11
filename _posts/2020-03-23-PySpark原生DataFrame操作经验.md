@@ -27,13 +27,13 @@ tags:
 这里主要记录一个结合word2vec模块的例子，从中总结一些word2vec与pyspark的应用。
 
 ### 获取每一列unique values
-```python
+{% highlight python %}
 # select unique values in each column
 texts = set()
 for col in text_cols:
     tmp_data = [i[col] for i in df.select(col).distinct().collect()]
     texts.update(tmp_data)
-```
+{% endhighlight %}
 
 在SQL中可以通过
 ```text
@@ -41,9 +41,9 @@ select distinct(colname) from table
 ```
 实现，
 在pandas中是
-```python
+{% highlight python %}
 df[colname].unique()
-```
+{% endhighlight %}
 Spark的操作与SQL类似，通过distinct()与collect()，得到列col下的unique值列表，
 通过遍历需要查询的col，将所有值update到一个set中，保证不出现重复值。
 
@@ -52,19 +52,19 @@ Spark的操作与SQL类似，通过distinct()与collect()，得到列col下的un
 为了后续训练分类模型，针对数据中的文本特征，我们希望将其转换为词向量表示，这里我们使用Word2Vec来训练词向量。
 
 通过去重操作得到的文本list，首先通过正则表达式去除不需要的内容与符号，然后调用中文分词包jieba进行分词。
-```python
+{% highlight python %}
 texts_trans = [text_model.re_module(item) for item in texts]
 texts_trans = text_model.jieba_module(texts_trans, 'word2vec')
-```
+{% endhighlight %}
 可以根据业务需要，事先人为规定特殊词（即希望jieba在分词的时候，保留这些特殊词，
 例如“无门槛”可能会被分为“无”、“门槛”，如果希望保留“无门槛”这个语义，则可以通过jieba.suggest_freq(*)来实现）：
-```python
+{% highlight python %}
 import jieba
 import jieba.analyse
 
 for word in jieba_words:
     jieba.suggest_freq(word, True)
-```
+{% endhighlight %}
 分词结果示例：
 ```text
 分词前： 机票报销凭证
@@ -74,7 +74,7 @@ for word in jieba_words:
 准备好分词后的预料，则可以通过gensim.models.Word2Vec模块来构建模型。
 
 完整流程示例如下：
-```python
+{% highlight python %}
     from gensim.models import Word2Vec
     import numpy as np
     import jieba
@@ -124,16 +124,16 @@ for word in jieba_words:
         model = text_model.build(texts_trans, 'word2vec')  
         vectors = [text_model.text2vec(model, 'word2vec', t) for t in texts_trans]
         vector_columns = ["vector_{}".format(i) for i in range(len(vectors[0]))]
-```
+{% endhighlight %}
 我们来学习一下Word2Vec的具体用法，首先是类定义：
-```python
+{% highlight python %}
 class Word2Vec(utils.SaveLoad):
     def __init__(
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
             sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
             trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH):
-```
+{% endhighlight %}
 部分参数含义（具体文档请转[gensim官方API](https://radimrehurek.com/gensim/models/word2vec.html)）：
 ```text
 size：词向量维度，一般在50以上
@@ -153,7 +153,7 @@ online预测时，拉取并进行反序列化，这样是最快速的方法。
 一般来说，如果只是用于Python，可以采用pickle来进行序列化。为了支持跨语言读取
 （这里很重要，模型训练与线上预测很多时候是Scala、Java、C++等其他语言），
 这里采用**json**来进行序列化与反序列化。需要注意NaN问题（见注释）：
-```python
+{% highlight python %}
 # word2vec will generate NaN, after json serialization and setting to redis
 
 # the value is still NaN (which is only recognizable in numpy, not in Java or C++ etc.)
@@ -165,22 +165,22 @@ online预测时，拉取并进行反序列化，这样是最快速的方法。
 # in case we can load this json obj through any other programming language
 
 json_obj = json.dumps(res)
-```
+{% endhighlight %}
 
 然后采用自定义的RedisHelper对象，将序列化后的数据缓存到redis集群：
-```python
+{% highlight python %}
 Model2RedisHelper().setFile2redis(f=json_obj, name=name) 
-```
+{% endhighlight %}
 
 ![redis](/img/post-pyspark-redis.PNG)
 
 ### DataFrame存储到hive
 在一系列操作之后，df对象各个字段的值类型或许不是我们想要的结果。
 因此，可以根据自己需要，更改DataFrame每个字段的数值类型：
-```python
+{% highlight python %}
 for col in df.columns:
     df = df.withColumn(col, F.col(col).cast(type_dict[col]))
-```
+{% endhighlight %}
 这里的type_dict是预先定义好的“字段名-类型”的字典。
 
 在将df落表到Hive之前，需要注意：在全部的数据处理过程中，
@@ -189,7 +189,7 @@ Spark不支持numpy的数据类型，因此会报错。Spark对python内置的�
 因此有必要过滤、处理df中数值字段的type。
 
 示例：
-```python
+{% highlight python %}
 # spark do not support numpy data type
 
 # need to do transferring before assign to spark
@@ -197,7 +197,7 @@ Spark不支持numpy的数据类型，因此会报错。Spark对python内置的�
 # otherwise it will occur error
 
 values = [float(v) for v in values]  # from np.float64 to float
-```
+{% endhighlight %}
 
 ### 后记
 

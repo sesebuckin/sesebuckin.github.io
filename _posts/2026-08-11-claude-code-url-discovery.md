@@ -55,7 +55,7 @@ tags:
 
 入口是 `run_pipeline.py`。对每个域名，先尝试解析sitemap（robots.txt + 常见sitemap路径），sitemap拿不到内容时回退到解析首页的链接：
 
-```python
+{% highlight python %}
 from crawler_utils import crawl_domain, fetch_page, extract_page_content, should_skip_url
 
 async def process_single_domain(
@@ -77,7 +77,7 @@ async def process_single_domain(
             tasks = [fetch_page(session, url) for url in urls_to_fetch]
             html_results = await asyncio.gather(*tasks, return_exceptions=True)
             # ...
-```
+{% endhighlight %}
 
 几个关键的工程参数：
 
@@ -90,7 +90,7 @@ async def process_single_domain(
 
 抓取页面后，先做一轮工具页过滤。这一步虽简单但效果很好——URL泄露率0%，标题泄露率0.37%：
 
-```python
+{% highlight python %}
 def is_utility_page(url: str, title: str, h1_text: str) -> bool:
     """Check if a page is a utility/non-content page."""
     utility_patterns = [
@@ -101,7 +101,7 @@ def is_utility_page(url: str, title: str, h1_text: str) -> bool:
         "author", "contributor", "tag/", "category/",
     ]
     # ...
-```
+{% endhighlight %}
 
 `should_skip_url`在URL发现阶段就拦截了一波，`is_utility_page`在内容提取后做第二层过滤。两层防护下来，About Us、Privacy Policy这类页面基本进不了匹配环节。
 
@@ -134,7 +134,7 @@ def is_utility_page(url: str, title: str, h1_text: str) -> bool:
 
 第一阶段的匹配只有简单的子串匹配，这显然不够。于是改成了三级级联匹配——`matcher_utils.py` 中的 `KeywordMatcher` 类：
 
-```python
+{% highlight python %}
 class KeywordMatcher:
     def __init__(self, keywords, tfidf_threshold=0.18):
         self.keywords = keywords
@@ -148,7 +148,7 @@ class KeywordMatcher:
             "pt": PortugueseStemmer(),
         }
         self._build_tfidf_index()
-```
+{% endhighlight %}
 
 三个匹配阶段是层进的：
 
@@ -156,7 +156,7 @@ class KeywordMatcher:
 2. **词元Jaccard匹配**（Phase 2）—— 对关键词和目标文本分别做词干提取和小写化后计算Jaccard系数，能匹配到变形形式（复数、时态等）
 3. **TF-IDF余弦相似度**（Phase 3）—— 用scikit-learn的TfidfVectorizer，对所有关键词构建TF-IDF索引，对页面文本做同样的向量化后计算余弦相似度
 
-```python
+{% highlight python %}
 def match(self, text, url, title, h1_text):
     matches = []
 
@@ -182,7 +182,7 @@ def match(self, text, url, title, h1_text):
             if score >= self.tfidf_threshold:
                 matches.append((self.keywords[i], score))
     # ...
-```
+{% endhighlight %}
 
 TF-IDF阈值设在0.18是经过多次调整的。太低会引入噪声，太高会漏掉语义相关但用词不同的页面。
 
@@ -190,7 +190,7 @@ TF-IDF阈值设在0.18是经过多次调整的。太低会引入噪声，太高�
 
 有了三级匹配还不够。和Claude Code讨论后，设计了四层0-100分的相关性打分体系——`filter_results.py`：
 
-```python
+{% highlight python %}
 def compute_relevance_score(row, keyword_specificity, domain_blacklist):
     score = 0.0
 
@@ -234,7 +234,7 @@ def compute_relevance_score(row, keyword_specificity, domain_blacklist):
         score += 1
 
     return min(score, 100)
-```
+{% endhighlight %}
 
 分档逻辑：
 
@@ -255,12 +255,12 @@ Claude Code帮我分析后发现，有64个域名实际上是赌博相关域名�
 
 `retry_errors.py` 的改进策略：多个 UA 轮换，外加额外路径尝试和 HTTP/HTTPS 双协议回退。
 
-```python
+{% highlight python %}
 USER_AGENTS = [
     "Mozilla/5.0 ...",
     "Mozilla/5.0 ...",
 ]
-```
+{% endhighlight %}
 
 最终回收到1个域名（online-kolikkopelit.fi），追加了27条结果。
 

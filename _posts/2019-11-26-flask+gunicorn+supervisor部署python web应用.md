@@ -45,7 +45,7 @@ pip install -r requirements.txt # 具体项目所依赖的包
 
 具体的例子如下，有了这个框架，以后部署python web service可以照葫芦画瓢。
 
-```python
+{% highlight python %}
 from coupon_xgb import CouponPredict
 from sklearn.externals import joblib
 from flask import Flask, jsonify, request
@@ -108,7 +108,7 @@ def predict():
     
 if __name__ == "__main__":
     app.run()
-```
+{% endhighlight %}
 
 到这一步为止是我以前熟知的部署方式，即只使用flask。然而flask自带的服务器一般用于开发环境，而不适用于直接部署到生产环境，主要原因是性能问题。
 
