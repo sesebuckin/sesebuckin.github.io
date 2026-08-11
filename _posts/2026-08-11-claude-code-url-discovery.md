@@ -197,29 +197,41 @@ def compute_relevance_score(row, keyword_specificity, domain_blacklist):
     # L1: 关键词特异性 (0-40分)
     kw = row["Detected Keyword"].lower()
     if any(kw in slot_kw for slot_kw in SLOT_KEYWORDS):
-        score += 40  # 老虎机关键词 > 特异性最高
+        # 老虎机关键词，特异性最高
+        score += 40
     elif any(kw in guide_kw for guide_kw in GUIDE_KEYWORDS):
         score += 35
     elif any(kw in casino_kw for casino_kw in CASINO_KEYWORDS):
         score += 30
     else:
-        score += max(10, keyword_specificity.get(kw, 10))  # 通用词惩罚大
+        # 通用词，惩罚较大
+        score += max(10, keyword_specificity.get(kw, 10))
 
     # L2: 域名相关性 (0-30分)
     domain = row["Source Domain"].lower()
     if domain in domain_blacklist:
-        return min(score, 29)  # 黑名单域名强制上限29分
+        # 黑名单域名，强制上限29分
+        return min(score, 29)
     # 检查域名中的赌博信号词
-    gambling_signals = ["casino", "bet", "slot", "poker", "gambling", ...]
+    gambling_signals = [
+        "casino", "bet", "slot", "poker", "gambling",
+        # ... 更多信号词
+    ]
     score += sum(5 for s in gambling_signals if s in domain)
 
     # L3: 内容质量 (0-20分)
     url_depth = row["Target URL"].count("/") - 2
-    score += min(url_depth * 2, 8)  # URL深度
-    # 标题丰富度 + 路径赌博信号 ...
+    # URL深度加分 + 标题丰富度 + 路径赌博信号检测
+    score += min(url_depth * 2, 8)
 
     # L4: 匹配质量 (0-10分)
-    score += 5 if len(kw.split()) > 2 else (3 if len(kw.split()) > 1 else 1)
+    # 多词关键词得分更高
+    if len(kw.split()) > 2:
+        score += 5
+    elif len(kw.split()) > 1:
+        score += 3
+    else:
+        score += 1
 
     return min(score, 100)
 ```
@@ -241,13 +253,13 @@ def compute_relevance_score(row, keyword_specificity, domain_blacklist):
 
 Claude Code帮我分析后发现，有64个域名实际上是赌博相关域名但失败了（sitemap/首页不可达），于是写了 `retry_errors.py` 专门重试这些：
 
+`retry_errors.py` 的改进策略：多个 UA 轮换，外加额外路径尝试和 HTTP/HTTPS 双协议回退。
+
 ```python
-# retry_errors.py 的改进策略
 USER_AGENTS = [
-    "Mozilla/5.0 ...",  # 多个UA轮换
+    "Mozilla/5.0 ...",
     "Mozilla/5.0 ...",
 ]
-# 额外路径尝试 + HTTP/HTTPS双协议回退
 ```
 
 最终回收到1个域名（online-kolikkopelit.fi），追加了27条结果。
